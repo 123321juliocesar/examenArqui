@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { ProductosController as C } from '../controllers/ProductosController.js';
+import { wrap } from '../controllers/wrap.js';
+import { requireAuth,requireAdmin } from '../middlewares/auth.js';
+const r=Router();
+r.get('/',wrap(C.list));
+r.get('/buscar',wrap(C.search));
+r.get('/categorias',wrap(C.categories));
+r.get('/stock-bajo',requireAuth,requireAdmin,wrap(C.lowStock));
+r.get('/:id',wrap(C.byId));
+export default r;

@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import { ComprasController as C } from '../controllers/ComprasController.js';
+import { ProductosController } from '../controllers/ProductosController.js';
+import { wrap } from '../controllers/wrap.js';
+import { requireAuth,requireAdmin } from '../middlewares/auth.js';
+const r=Router();
+r.use(requireAuth,requireAdmin);
+r.get('/stock-bajo',wrap(ProductosController.lowStock));
+r.get('/movimientos/:idProducto',wrap(C.movements));
+export default r;

@@ -1,0 +1,118 @@
+### Tienda Andina: pruebas en VS Code con extensión REST Client
+### Cambia los tokens después de usar /registro o /login.
+@base = http://localhost:4000
+@tokenCliente = PEGA_AQUI_TOKEN_CLIENTE
+@tokenAdmin = PEGA_AQUI_TOKEN_ADMIN
+
+### 0. Salud de la API y base
+GET {{base}}/api/salud
+
+### 1. Registrar persona natural (rol CLIENTE)
+POST {{base}}/api/auth/registro
+Content-Type: application/json
+
+{
+  "tipo": "natural", "nombre": "Ana", "apellido": "Quispe",
+  "dni": "12345678", "fechaNacimiento": "2001-01-12",
+  "telefono": "987654321", "email": "ana.demo@ejemplo.com", "password": "ClaveSegura123"
+}
+
+### 1b. Registrar persona jurídica (opcional)
+POST {{base}}/api/auth/registro
+Content-Type: application/json
+
+{
+  "tipo": "juridica", "razonSocial": "Empresa Demo SAC", "ruc": "20123456789",
+  "representante": "Luis Quispe", "cargo": "Gerente", "rubro": "Restaurante",
+  "direccion": "Abancay", "telefono": "987654322",
+  "email": "empresa.demo@ejemplo.com", "password": "ClaveSegura123"
+}
+
+### 1c. Login (también usar para el ADMIN)
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"email":"ana.demo@ejemplo.com","password":"ClaveSegura123"}
+
+### 1d. Perfil
+GET {{base}}/api/auth/me
+Authorization: Bearer {{tokenCliente}}
+
+### 1e. Editar perfil
+PATCH {{base}}/api/auth/me
+Authorization: Bearer {{tokenCliente}}
+Content-Type: application/json
+
+{"telefono":"912345678","direccion":"Av. Perú 123"}
+
+### 2. Autocompletado (mínimo 2 letras)
+GET {{base}}/api/productos/buscar?q=qui
+
+### 3. Filtros: lácteos, máximo 15 soles, disponibles
+GET {{base}}/api/productos?categoria=1&precioMax=15&disponible=true
+
+### 3b. Categorías y lista pública
+GET {{base}}/api/productos/categorias
+
+### 4. Crear pedido (precios los calcula el servidor)
+POST {{base}}/api/pedidos
+Authorization: Bearer {{tokenCliente}}
+Content-Type: application/json
+
+{
+  "items":[{"idProducto":4,"cantidad":2},{"idProducto":1,"cantidad":1}],
+  "direccionEntrega":"Abancay, centro", "notas":"Entregar por la mañana"
+}
+
+### 4b. Mis pedidos
+GET {{base}}/api/pedidos/mios
+Authorization: Bearer {{tokenCliente}}
+
+### 4c. Consultar detalle de pedido (propietario o ADMIN)
+GET {{base}}/api/pedidos/1
+Authorization: Bearer {{tokenCliente}}
+
+### 4d. Cerrar pedido como ADMIN, EFECTIVO = dinero entregado realmente
+POST {{base}}/api/pedidos/1/cerrar
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{"medio":"SIMULADO","monto":"26.30","observacion":"Exposición: no se cobró dinero real"}
+
+### 5. Identificar productos con stock bajo (ADMIN)
+GET {{base}}/api/inventario/stock-bajo
+Authorization: Bearer {{tokenAdmin}}
+
+### 5b. Listar proveedores (ADMIN)
+GET {{base}}/api/reposiciones/proveedores
+Authorization: Bearer {{tokenAdmin}}
+
+### 5c. Generar orden de compra al proveedor (ADMIN)
+POST {{base}}/api/reposiciones
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "idProveedor":1,
+  "items":[{"idProducto":3,"cantidad":20,"costoUnitario":"8.00"}],
+  "observacion":"Reponer queso fresco"
+}
+
+### 5d. Registrar recepción (reemplaza ID con respuesta anterior, ADMIN)
+POST {{base}}/api/reposiciones/1/recibir
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{"observacion":"Se recibieron todas las unidades"}
+
+### 5e. Movimientos de stock (ADMIN)
+GET {{base}}/api/inventario/movimientos/3
+Authorization: Bearer {{tokenAdmin}}
+
+### Ver orden de compra (ADMIN)
+GET {{base}}/api/reposiciones/1
+Authorization: Bearer {{tokenAdmin}}
+
+### Pedidos recientes (ADMIN, lista operativa mínima sin dashboard)
+GET {{base}}/api/pedidos/admin/todos
+Authorization: Bearer {{tokenAdmin}}

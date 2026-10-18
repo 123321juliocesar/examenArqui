@@ -1,0 +1,12 @@
+import { Router } from 'express';
+import { PedidosController as C } from '../controllers/PedidosController.js';
+import { wrap } from '../controllers/wrap.js';
+import { requireAuth,requireAdmin } from '../middlewares/auth.js';
+const r=Router();
+r.use(requireAuth);
+r.post('/',wrap(C.create));
+r.get('/mios',wrap(C.mine));
+r.get('/admin/todos',requireAdmin,wrap(C.all));
+r.get('/:id',wrap(C.byId));
+r.post('/:id/cerrar',requireAdmin,wrap(C.close));
+export default r;

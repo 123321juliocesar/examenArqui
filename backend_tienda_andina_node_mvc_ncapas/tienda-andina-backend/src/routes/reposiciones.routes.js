@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { ComprasController as C } from '../controllers/ComprasController.js';
+import { wrap } from '../controllers/wrap.js';
+import { requireAuth,requireAdmin } from '../middlewares/auth.js';
+const r=Router();
+r.use(requireAuth,requireAdmin);
+r.get('/proveedores',wrap(C.suppliers));
+r.post('/',wrap(C.create));
+r.get('/:id',wrap(C.byId));
+r.post('/:id/recibir',wrap(C.receive));
+export default r;

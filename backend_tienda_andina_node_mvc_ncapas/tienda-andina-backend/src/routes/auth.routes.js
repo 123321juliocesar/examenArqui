@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import { AuthController as C } from '../controllers/AuthController.js';
+import { wrap } from '../controllers/wrap.js';
+import { requireAuth } from '../middlewares/auth.js';
+const r=Router();
+r.post('/registro',wrap(C.register));
+r.post('/login',wrap(C.login));
+r.get('/me',requireAuth,wrap(C.me));
+r.patch('/me',requireAuth,wrap(C.updateMe));
+export default r;
