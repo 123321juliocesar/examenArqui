@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Proceso 4 · Venta iniciada desde el carrito</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, Segoe UI, Arial, sans-serif; --ink:#17263b; --muted:#53647a; --line:#d8e1ed; --blue:#275fd5; --paper:#f4f7fb; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--paper); }
+    button { font:inherit; cursor:pointer; }
+    button:focus-visible, a:focus-visible { outline:3px solid #f2a52f; outline-offset:3px; }
+    header { padding:20px clamp(18px,3vw,42px); background:#fff; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    h1 { font-size:clamp(20px,2vw,30px); margin:0 0 4px; }
+    header p { margin:0; color:var(--muted); }
+    .controls { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .controls button, .nav button { border:1px solid #b8c7dc; border-radius:9px; background:#fff; color:var(--ink); padding:9px 12px; }
+    .controls button:hover, .nav button:hover { background:#eaf1ff; }
+    #zoomLabel { min-width:48px; text-align:center; font-variant-numeric:tabular-nums; }
+    main { display:grid; grid-template-columns:minmax(0,1fr) minmax(290px,360px); gap:16px; padding:16px; height:calc(100vh - 96px); min-height:520px; }
+    .board { overflow:auto; border:1px solid var(--line); border-radius:16px; background:#f8fafc; box-shadow:0 8px 28px #17263b10; }
+    .canvas { position:relative; width:var(--canvas-width,950px); margin:0 auto; }
+    .canvas img { display:block; width:100%; height:auto; }
+    .hotspot { position:absolute; transform:translate(-50%,-50%); border:2px solid transparent; border-radius:15px; background:transparent; color:transparent; }
+    .hotspot:hover, .hotspot:focus-visible, .hotspot.active { border-color:var(--blue); background:#275fd51a; box-shadow:0 0 0 5px #275fd52b; }
+    aside { display:flex; flex-direction:column; min-height:0; background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:0 8px 28px #17263b10; }
+    .detail { padding:24px; overflow:auto; }
+    .kicker { margin:0 0 10px; color:var(--blue); font-size:13px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    h2 { margin:0 0 14px; font-size:25px; line-height:1.2; }
+    .detail p { line-height:1.55; }
+    .detail dl { border-top:1px solid var(--line); margin:22px 0 0; padding-top:18px; }
+    dt { font-weight:700; margin:16px 0 5px; }
+    dd { margin:0; color:var(--muted); line-height:1.5; overflow-wrap:anywhere; }
+    .nav { margin-top:auto; border-top:1px solid var(--line); padding:14px 20px; display:flex; gap:8px; justify-content:space-between; }
+    .nav button { flex:1; }
+    .nav button:disabled { opacity:.45; cursor:not-allowed; }
+    .hint { padding:0 24px 20px; color:var(--muted); font-size:13px; }
+    @media (max-width:850px) { main { display:flex; flex-direction:column; height:auto; min-height:0; } .board { height:65vh; min-height:340px; } aside { min-height:340px; } }
+    @media (prefers-reduced-motion:no-preference) { .hotspot { transition:background .15s,box-shadow .15s; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div><h1>Venta al cliente iniciada desde el carrito</h1><p>Recorre el flujo real del MVP: selección → pedido → entrega y cobro registrado.</p></div>
+    <div class="controls" aria-label="Controles del diagrama"><button id="minus" type="button" aria-label="Alejar">−</button><span id="zoomLabel" aria-live="polite">100%</span><button id="plus" type="button" aria-label="Acercar">+</button><button id="reset" type="button">Restablecer</button></div>
+  </header>
+  <main>
+    <section class="board" id="board" aria-label="Diagrama interactivo"><div class="canvas" id="canvas"><img src="./diagrama-04-carrito.svg" alt="Diagrama de venta con doce elementos y doce flechas numeradas"></div></section>
+    <aside aria-label="Explicación del elemento seleccionado">
+      <div class="detail" id="detail" aria-live="polite"></div>
+      <div class="nav"><button id="prev" type="button">← Anterior</button><button id="next" type="button">Siguiente →</button></div>
+      <div class="hint">Toca un bloque del diagrama o usa las flechas ← → del teclado. El zoom cambia solo la vista, no los datos.</div>
+    </aside>
+  </main>
+  <script>
+    const steps = [
+      {name:'Cliente', at:[795,285], why:'El cliente autenticado decide comprar un producto. Si no tiene sesión, la interfaz le pide iniciar sesión.', data:'Producto elegido y cantidad solicitada.', code:'Products.tsx → App.addToCart'},
+      {name:'Catálogo', at:[795,465], why:'La tarjeta del producto permite agregar una unidad si el stock mostrado es mayor que cero.', data:'CartItem: id, nombre, precio mostrado, qty=1 y stock mostrado.', code:'components/Products.tsx · handleAdd'},
+      {name:'Carrito dinámico', at:[795,645], why:'React permite aumentar, disminuir o eliminar unidades. El total mostrado aún es provisional; no hay pedido en MySQL.', data:'items, cantidades, dirección y notas.', code:'App.tsx · addToCart/updateQty/checkout; CartSidebar.tsx'},
+      {name:'API del frontend', at:[795,825], why:'Convierte el carrito en una petición HTTP autenticada. No envía el precio de React como precio oficial.', data:'JSON con {idProducto, cantidad}, dirección, notas; JWT.', code:'lib/api.ts · placeOrder'},
+      {name:'Ruta y controlador: crear', at:[795,1005], why:'La ruta exige sesión; el controlador obtiene el ID del cliente del token validado.', data:'id_usuario autenticado y body de POST /api/pedidos.', code:'src/routes/pedidos.routes.js; src/controllers/PedidosController.js'},
+      {name:'PedidosService.create', at:[795,1185], why:'Orquesta validación, cálculo y escritura bajo una transacción. Si falla, se revierte.', data:'IDs de productos; total y detalles calculados.', code:'src/services/PedidosService.js · create; src/config/db.js · withTransaction'},
+      {name:'MySQL: productos', at:[1525,1325], why:'El servidor bloquea las filas con SELECT ... FOR UPDATE y usa precio, stock y estado activo vigentes.', data:'Respuesta: precio, stock y activo. Stock insuficiente → 409.', code:'src/repositories/ProductoRepository.js · lockIds; tabla productos'},
+      {name:'MySQL: pedido', at:[795,1545], why:'En la misma transacción se insertan pedido y detalles, se descuenta stock y se registra la salida.', data:'idPedido, total, CONFIRMADO; movimiento SALIDA_VENTA.', code:'PedidoRepository.create/insertDetail/insertStockMovement; ProductoRepository.changeStock'},
+      {name:'Administrador', at:[795,1785], why:'Consulta el pedido confirmado y verifica fuera del sistema que hubo entrega y cobro antes de cerrarlo.', data:'idPedido, total, medio y monto.', code:'components/OrdersPanel.tsx · allOrders/orderDetail/close'},
+      {name:'Ruta y controlador: cerrar', at:[795,1965], why:'Solo ADMIN puede ejecutar la ruta de cierre. Una sesión de cliente no basta.', data:'POST /api/pedidos/:id/cerrar con medio, monto y posible referencia.', code:'pedidos.routes.js · requireAdmin; PedidosController.close'},
+      {name:'PedidosService.close', at:[795,2145], why:'Bloquea el pedido, comprueba estado CONFIRMADO y monto exacto; después coordina otra transacción.', data:'idPedido, idAdmin, medio y monto validados.', code:'src/services/PedidosService.js · close'},
+      {name:'MySQL: cierre de venta', at:[795,2325], why:'La transacción inserta el pago y actualiza el pedido a ENTREGADO. SIMULADO es solo una demostración, no dinero recibido.', data:'pagos + pedidos.estado=ENTREGADO.', code:'PedidoRepository.insertPayment/close; tablas pagos y pedidos'}
+    ];
+    const canvas = document.getElementById('canvas'), board = document.getElementById('board'), detail = document.getElementById('detail');
+    const hotspots = steps.map((s,i) => { const b=document.createElement('button'); b.type='button'; b.className='hotspot'; b.setAttribute('aria-label',`Paso ${i+1}: ${s.name}`); b.style.left=`${s.at[0]/1900*100}%`; b.style.top=`${s.at[1]/2460*100}%`; b.style.width=`${450/1900*100}%`; b.style.height=`${120/2460*100}%`; b.addEventListener('click',()=>select(i)); canvas.append(b); return b; });
+    let selected=0, zoom=1;
+    function select(i) { selected=Math.max(0,Math.min(steps.length-1,i)); const s=steps[selected]; hotspots.forEach((b,j)=>{b.classList.toggle('active',j===selected);b.setAttribute('aria-pressed',String(j===selected));}); detail.innerHTML=`<p class="kicker">Elemento ${selected+1} de 12 · ${selected<8?'Fase 1: pedido':'Fase 2: cierre'}</p><h2>${s.name}</h2><p>${s.why}</p><dl><dt>Dato que viaja</dt><dd>${s.data}</dd><dt>En el código</dt><dd>${s.code}</dd></dl>`; document.getElementById('prev').disabled=selected===0; document.getElementById('next').disabled=selected===steps.length-1; const target=hotspots[selected]; const centerX=target.offsetLeft, centerY=target.offsetTop; board.scrollTo({left:Math.max(0,centerX-board.clientWidth/2),top:Math.max(0,centerY-board.clientHeight/2),behavior:'smooth'}); }
+    function setZoom(value) { zoom=Math.max(.6,Math.min(1.8,Math.round(value*10)/10)); canvas.style.setProperty('--canvas-width',`${950*zoom}px`); document.getElementById('zoomLabel').textContent=`${Math.round(zoom*100)}%`; select(selected); }
+    document.getElementById('prev').onclick=()=>select(selected-1); document.getElementById('next').onclick=()=>select(selected+1);
+    document.getElementById('minus').onclick=()=>setZoom(zoom-.2); document.getElementById('plus').onclick=()=>setZoom(zoom+.2); document.getElementById('reset').onclick=()=>setZoom(1);
+    window.addEventListener('keydown',e=>{if(e.target instanceof HTMLInputElement)return;if(e.key==='ArrowRight')select(selected+1);if(e.key==='ArrowLeft')select(selected-1);});
+    select(0);
+  </script>
+</body>
+</html>
